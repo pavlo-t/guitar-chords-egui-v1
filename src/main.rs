@@ -9,11 +9,7 @@ fn main() -> eframe::Result {
         viewport: egui::ViewportBuilder::default().with_inner_size([1080.0, 480.0]),
         ..Default::default()
     };
-    eframe::run_native(
-        "Guitar Chords",
-        options,
-        Box::new(|_cc| Ok(Box::<MyApp>::default())),
-    )
+    eframe::run_native("Guitar Chords", options, Box::new(|_cc| Ok(Box::<MyApp>::default())))
 }
 
 struct MyApp {
@@ -22,9 +18,7 @@ struct MyApp {
 
 impl Default for MyApp {
     fn default() -> Self {
-        Self {
-            strings: vec![None; 6],
-        }
+        Self { strings: vec![None; 6] }
     }
 }
 
@@ -70,7 +64,7 @@ impl eframe::App for MyApp {
             let mut notes = notes.into_iter().collect::<Vec<_>>();
             notes.sort_unstable();
             let notes_display = notes.iter().map(|&n| note_name(n)).collect::<Vec<_>>();
-            ui.label(format!("Selected notes: {notes_display:#?}"));
+            ui.label(format!("Selected notes: {notes_display:?}"));
             ui.label(format!("Selected chord: {:#?}", possible_chords(&notes)));
         });
     }
@@ -130,27 +124,49 @@ fn possible_chords(notes: &[u8]) -> Vec<String> {
     if notes.is_empty() {
         return result;
     }
-    let mut notes = notes.to_vec();
-    notes.sort_unstable();
-    // TODO this is incorrect, but it's a start, works with C and C#
-    //  iterate over roots
-    let root = notes[0];
-
-    notes.iter_mut().for_each(|n| *n -= root);
-    if notes == MAJOR_TRIAD {
-        result.push(note_name(root).to_string());
-    }
-    if notes == MINOR_TRIAD {
-        result.push(note_name(root).to_string() + "m");
-    }
-    if notes == DOMINANT_SEVENTH {
-        result.push(note_name(root).to_string() + "7");
+    let chords = Chord::all_chords();
+    for &root in notes.iter() {
+        let mut intervals = notes.iter().map(|&n| (n + 12 - root) % 12).collect::<Vec<_>>();
+        intervals.sort_unstable();
+        for chord in chords.iter() {
+            if chord.matches(&intervals) {
+                result.push(chord.short_name(note_name(root).as_str()) + ", " + chord.name.as_str());
+            }
+        }
     }
 
     result
 }
 
-const MAJOR_TRIAD: [u8; 3] = [0, 4, 7];
-const MINOR_TRIAD: [u8; 3] = [0, 3, 7];
+struct Chord {
+    name: String,
+    suffix: String,
+    intervals: Vec<u8>,
+}
 
-const DOMINANT_SEVENTH: [u8; 4] = [0, 4, 7, 10];
+impl Chord {
+    fn all_chords() -> Vec<Self> {
+        vec![
+            Chord::new("Power Chord", "5", vec![0, 7]),
+            Chord::new("Major Triad", "", vec![0, 4, 7]),
+            Chord::new("Minor Triad", "m", vec![0, 3, 7]),
+            Chord::new("Dominant Seventh", "7", vec![0, 4, 7, 10]),
+        ]
+    }
+
+    fn new(name: &str, suffix: &str, intervals: Vec<u8>) -> Self {
+        Self {
+            name: name.to_string(),
+            suffix: suffix.to_string(),
+            intervals,
+        }
+    }
+
+    fn matches(&self, intervals: &[u8]) -> bool {
+        intervals == self.intervals
+    }
+
+    fn short_name(&self, note: &str) -> String {
+        note.to_string() + &self.suffix
+    }
+}
