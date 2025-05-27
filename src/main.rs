@@ -2,6 +2,7 @@
 
 use eframe::egui;
 use std::collections::HashSet;
+use std::sync::LazyLock;
 
 fn main() -> eframe::Result {
     env_logger::init();
@@ -124,11 +125,10 @@ fn possible_chords(notes: &[u8]) -> Vec<String> {
     if notes.is_empty() {
         return result;
     }
-    let chords = Chord::all_chords();
     for &root in notes.iter() {
         let mut intervals = notes.iter().map(|&n| (n + 12 - root) % 12).collect::<Vec<_>>();
         intervals.sort_unstable();
-        for chord in chords.iter() {
+        for chord in all_chords().iter() {
             if chord.matches(&intervals) {
                 result.push(chord.short_name(note_name(root).as_str()) + ", " + chord.name.as_str());
             }
@@ -145,15 +145,6 @@ struct Chord {
 }
 
 impl Chord {
-    fn all_chords() -> Vec<Self> {
-        vec![
-            Chord::new("Power Chord", "5", vec![0, 7]),
-            Chord::new("Major Triad", "", vec![0, 4, 7]),
-            Chord::new("Minor Triad", "m", vec![0, 3, 7]),
-            Chord::new("Dominant Seventh", "7", vec![0, 4, 7, 10]),
-        ]
-    }
-
     fn new(name: &str, suffix: &str, intervals: Vec<u8>) -> Self {
         Self {
             name: name.to_string(),
@@ -169,4 +160,17 @@ impl Chord {
     fn short_name(&self, note: &str) -> String {
         note.to_string() + &self.suffix
     }
+}
+
+fn all_chords() -> &'static Vec<Chord> {
+    static INSTANCE: LazyLock<Vec<Chord>> = LazyLock::new(|| {
+        vec![
+            Chord::new("Power Chord", "5", vec![0, 7]),
+            Chord::new("Major Triad", "", vec![0, 4, 7]),
+            Chord::new("Minor Triad", "m", vec![0, 3, 7]),
+            Chord::new("Dominant Seventh", "7", vec![0, 4, 7, 10]),
+            // TODO add more chords
+        ]
+    });
+    &*INSTANCE
 }
