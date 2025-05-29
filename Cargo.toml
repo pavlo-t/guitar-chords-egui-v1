@@ -3,6 +3,13 @@ name = "guitar-chords-egui-v1"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+path = "src/main.rs"
+name = "guitar-chords-egui-v1"
+
 [dependencies]
 eframe = { version = "0.31.1" }
 env_logger = { version = "0.11", default-features = false, features = ["auto-color", "humantime"] }
