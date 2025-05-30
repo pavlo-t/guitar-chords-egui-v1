@@ -13,6 +13,22 @@ pub const A: Note = 9;
 pub const AS: Note = 10;
 pub const B: Note = 11;
 
+pub fn notes_add(a: Note, b: Note) -> Note {
+    (a + b) % 12
+}
+
+pub fn notes_sub(a: Note, b: Note) -> Note {
+    (a + 12 - b) % 12
+}
+
+pub fn note_fourth(note: Note) -> Note {
+    (note + 5) % 12
+}
+
+pub fn note_fifth(note: Note) -> Note {
+    (note + 7) % 12
+}
+
 pub fn note_button_label(note: Note) -> String {
     match note {
         C => " C\n".to_string(),
