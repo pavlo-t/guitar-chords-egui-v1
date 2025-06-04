@@ -47,7 +47,6 @@ impl eframe::App for GuitarChordsApp {
             match self.selected_tab {
                 GuitarChordsTabs::ChordIdentifier => self.chord_identifier(ui),
                 GuitarChordsTabs::ChordFinder => self.chord_finder(ui),
-                GuitarChordsTabs::CustomizeGuitar => self.customize_guitar(ui),
             }
         });
     }
@@ -71,28 +70,52 @@ impl GuitarChordsApp {
             if chord_finder_tab.clicked() {
                 self.selected_tab = GuitarChordsTabs::ChordFinder;
             }
-
-            ui.separator();
-
-            let customize_guitar_tab = ui.selectable_label(
-                self.selected_tab == GuitarChordsTabs::CustomizeGuitar,
-                "Customize Guitar",
-            );
-            if customize_guitar_tab.clicked() {
-                self.selected_tab = GuitarChordsTabs::CustomizeGuitar;
-            }
         });
     }
 
     fn chord_identifier(&mut self, ui: &mut Ui) {
-        for (string, selected_fret) in self.frets_selected.iter_mut().enumerate() {
+        self.pick_guitar(ui);
+        ui.separator();
+
+        for string in 0..self.guitar.guitar_strings.len() {
+            if string >= self.guitar.guitar_strings.len() {
+                break;
+            }
             ui.horizontal(|ui| {
                 ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
 
-                for fret in 0..=24 {
+                if ui.button("X").clicked() {
+                    self.guitar.guitar_strings.remove(string);
+                    self.frets_selected.remove(string);
+                    return;
+                }
+
+                if ui.button("-").clicked() {
+                    let s = self.guitar.guitar_strings[string].tuning;
+                    self.guitar.guitar_strings[string].tuning = notes_sub(s, 1);
+                }
+
+                let tuning = &mut self.guitar.guitar_strings[string].tuning;
+
+                egui::ComboBox::from_id_salt(string)
+                    .selected_text(&note_name(*tuning))
+                    .width(40.0)
+                    .show_ui(ui, |ui| {
+                        for note in 0..12 {
+                            ui.selectable_value(tuning, note, note_name(note));
+                        }
+                    });
+
+                if ui.button("+").clicked() {
+                    let s = self.guitar.guitar_strings[string].tuning;
+                    self.guitar.guitar_strings[string].tuning = notes_add(s, 1);
+                }
+
+                for fret in 0..=15 {
                     if fret > 0 {
                         ui.separator();
                     }
+                    let selected_fret = self.frets_selected.get_mut(string).unwrap();
                     let sl = ui.selectable_label(
                         selected_fret.is_some_and(|v| v == fret),
                         note_button_label(self.guitar.fret_to_note(string, fret)),
@@ -107,6 +130,20 @@ impl GuitarChordsApp {
                 }
             });
         }
+
+        ui.separator();
+
+        ui.horizontal(|ui| {
+            if ui.button("Add string (fifth)").clicked() {
+                self.guitar.add_string(note_fifth, E);
+                self.frets_selected.push(None);
+            }
+
+            if ui.button("Add string (fourth)").clicked() {
+                self.guitar.add_string(note_fourth, A);
+                self.frets_selected.push(None);
+            }
+        });
 
         ui.separator();
 
@@ -130,7 +167,7 @@ impl GuitarChordsApp {
         // TODO
     }
 
-    fn customize_guitar(&mut self, ui: &mut Ui) {
+    fn pick_guitar(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             let guitar_6_string_standard_button = ui.selectable_label(
                 self.guitar == Guitar::guitar_6_string_standard(),
@@ -159,63 +196,6 @@ impl GuitarChordsApp {
                 self.frets_selected = vec![None; 5];
             }
         });
-
-        ui.separator();
-
-        for string in 0..self.guitar.guitar_strings.len() {
-            if string >= self.guitar.guitar_strings.len() {
-                break;
-            }
-            ui.horizontal(|ui| {
-                ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
-
-                if ui.button("x").clicked() {
-                    self.guitar.guitar_strings.remove(string);
-                    self.frets_selected.remove(string);
-                    return;
-                }
-
-                if ui.button("-").clicked() {
-                    let s = self.guitar.guitar_strings[string].tuning;
-                    self.guitar.guitar_strings[string].tuning = notes_sub(s, 1);
-                }
-
-                let tuning = &mut self.guitar.guitar_strings[string].tuning;
-
-                egui::ComboBox::from_id_salt(string)
-                    .selected_text(&note_name(*tuning))
-                    .width(40.0)
-                    .show_ui(ui, |ui| {
-                        for note in 0..12 {
-                            ui.selectable_value(tuning, note, note_name(note));
-                        }
-                    });
-
-                if ui.button("+").clicked() {
-                    let s = self.guitar.guitar_strings[string].tuning;
-                    self.guitar.guitar_strings[string].tuning = notes_add(s, 1);
-                }
-
-                for fret in 0..=12 {
-                    ui.separator();
-                    ui.label(note_button_label(self.guitar.fret_to_note(string, fret)));
-                }
-            });
-        }
-
-        ui.separator();
-
-        ui.horizontal(|ui| {
-            if ui.button("Add string (fifth)").clicked() {
-                self.guitar.add_string(note_fifth, E);
-                self.frets_selected.push(None);
-            }
-
-            if ui.button("Add string (fourth)").clicked() {
-                self.guitar.add_string(note_fourth, A);
-                self.frets_selected.push(None);
-            }
-        });
     }
 }
 
@@ -223,5 +203,4 @@ impl GuitarChordsApp {
 enum GuitarChordsTabs {
     ChordIdentifier,
     ChordFinder,
-    CustomizeGuitar,
 }

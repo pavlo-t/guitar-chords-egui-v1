@@ -35,7 +35,13 @@ pub fn all_chords() -> &'static Vec<Chord> {
             Chord::new("Power Chord", "5", vec![0, 7]),
             Chord::new("Major Triad", "", vec![0, 4, 7]),
             Chord::new("Minor Triad", "m", vec![0, 3, 7]),
-            Chord::new("Dominant Seventh", "7", vec![0, 4, 7, 10]),
+            Chord::new("Dominant 7th", "7", vec![0, 4, 7, 10]),
+            Chord::new("Major 6th", "6", vec![0, 4, 7, 9]),
+            Chord::new("Major 6/9", "6/9", vec![0, 2, 4, 7, 9]),
+            Chord::new("Major 7th", "M7", vec![0, 4, 7, 11]),
+            Chord::new("Major 9th", "M9", vec![0, 2, 4, 7, 11]),
+            Chord::new("Major 11th", "M11", vec![0, 2, 4, 5, 7, 11]),
+            Chord::new("Major 13th", "M13", vec![0, 2, 4, 5, 7, 9, 11]),
             // TODO add more chords
         ]
     });
