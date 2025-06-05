@@ -1,7 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
+use cpal::traits::StreamTrait;
 use eframe::egui;
 use eframe::egui::Ui;
+use guitar_chords_egui_v1::audio::play_frequency;
 use guitar_chords_egui_v1::chords::possible_chords;
 use guitar_chords_egui_v1::guitar::Guitar;
 use guitar_chords_egui_v1::notes::*;
@@ -24,6 +26,7 @@ struct GuitarChordsApp {
     guitar: Guitar,
     frets_selected: Vec<Option<u8>>,
     selected_tab: GuitarChordsTabs,
+    audio_streams: Vec<cpal::Stream>,
 }
 
 impl Default for GuitarChordsApp {
@@ -32,6 +35,7 @@ impl Default for GuitarChordsApp {
             guitar: Guitar::guitar_6_string_standard(),
             frets_selected: vec![None; 6],
             selected_tab: GuitarChordsTabs::ChordIdentifier,
+            audio_streams: vec![],
         }
     }
 }
@@ -46,6 +50,7 @@ impl eframe::App for GuitarChordsApp {
 
             match self.selected_tab {
                 GuitarChordsTabs::ChordIdentifier => self.chord_identifier(ui),
+                GuitarChordsTabs::AudioPlayback => self.audio_playback(ui),
                 GuitarChordsTabs::ChordFinder => self.chord_finder(ui),
             }
         });
@@ -61,6 +66,14 @@ impl GuitarChordsApp {
             );
             if chord_identifier_tab.clicked() {
                 self.selected_tab = GuitarChordsTabs::ChordIdentifier;
+            }
+
+            ui.separator();
+
+            let audio_playback =
+                ui.selectable_label(self.selected_tab == GuitarChordsTabs::AudioPlayback, "Audio Playback");
+            if audio_playback.clicked() {
+                self.selected_tab = GuitarChordsTabs::AudioPlayback;
             }
 
             ui.separator();
@@ -162,6 +175,68 @@ impl GuitarChordsApp {
         ui.label(format!("Selected chord: {:#?}", possible_chords(&notes)));
     }
 
+    fn audio_playback(&mut self, ui: &mut Ui) {
+        ui.label("Note playback:");
+
+        if ui.button("Play C4").clicked() {
+            self.audio_streams.push(play_frequency(261.63));
+        }
+        if ui.button("Play C#4").clicked() {
+            self.audio_streams.push(play_frequency(277.18));
+        }
+        if ui.button("Play D4").clicked() {
+            self.audio_streams.push(play_frequency(293.66));
+        };
+        if ui.button("Play D#4").clicked() {
+            self.audio_streams.push(play_frequency(311.13));
+        };
+        if ui.button("Play E4").clicked() {
+            self.audio_streams.push(play_frequency(329.63));
+        };
+        if ui.button("Play F4").clicked() {
+            self.audio_streams.push(play_frequency(349.23));
+        };
+        if ui.button("Play F#4").clicked() {
+            self.audio_streams.push(play_frequency(369.99));
+        };
+        if ui.button("Play G4").clicked() {
+            self.audio_streams.push(play_frequency(392.00));
+        };
+        if ui.button("Play G#4").clicked() {
+            self.audio_streams.push(play_frequency(415.30));
+        };
+        if ui.button("Play A4").clicked() {
+            self.audio_streams.push(play_frequency(440.00));
+        };
+        if ui.button("Play A#4").clicked() {
+            self.audio_streams.push(play_frequency(466.16));
+        };
+        if ui.button("Play B4").clicked() {
+            self.audio_streams.push(play_frequency(493.88));
+        };
+
+        ui.separator();
+
+        ui.horizontal(|ui| {
+            if ui.button("Stop all").clicked() {
+                self.audio_streams.clear();
+            }
+
+            if ui.button("Pause all").clicked() {
+                for stream in self.audio_streams.iter_mut() {
+                    stream.pause().expect("pause failed");
+                }
+            }
+
+            if ui.button("Un-Pause all").clicked() {
+                for stream in self.audio_streams.iter_mut() {
+                    stream.play().expect("play failed");
+                }
+            }
+        });
+        // TODO
+    }
+
     fn chord_finder(&mut self, ui: &mut Ui) {
         ui.label("TODO: Chord finder");
         // TODO
@@ -202,5 +277,6 @@ impl GuitarChordsApp {
 #[derive(PartialEq)]
 enum GuitarChordsTabs {
     ChordIdentifier,
+    AudioPlayback,
     ChordFinder,
 }
