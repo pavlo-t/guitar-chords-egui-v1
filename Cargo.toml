@@ -11,6 +11,7 @@ path = "src/main.rs"
 name = "guitar-chords-egui-v1"
 
 [dependencies]
-cpal = { version = "0.15", features = ["jack"] }
+cpal = { version = "0.16", features = ["jack"] }
 eframe = { version = "0.31.1" }
 env_logger = { version = "0.11", default-features = false, features = ["auto-color", "humantime"] }
+rand = "0.9"

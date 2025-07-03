@@ -3,7 +3,10 @@
 use cpal::traits::StreamTrait;
 use eframe::egui;
 use eframe::egui::Ui;
-use guitar_chords_egui_v1::audio::play_frequency;
+use guitar_chords_egui_v1::audio::{
+    play_frequency_sawtooth, play_frequency_sine_plus_harmonics, play_frequency_sine_wave,
+    playe_frequency_karplus_strong,
+};
 use guitar_chords_egui_v1::chords::possible_chords;
 use guitar_chords_egui_v1::guitar::Guitar;
 use guitar_chords_egui_v1::notes::*;
@@ -178,42 +181,63 @@ impl GuitarChordsApp {
     fn audio_playback(&mut self, ui: &mut Ui) {
         ui.label("Note playback:");
 
-        if ui.button("Play C4").clicked() {
-            self.audio_streams.push(play_frequency(261.63));
-        }
-        if ui.button("Play C#4").clicked() {
-            self.audio_streams.push(play_frequency(277.18));
-        }
-        if ui.button("Play D4").clicked() {
-            self.audio_streams.push(play_frequency(293.66));
-        };
-        if ui.button("Play D#4").clicked() {
-            self.audio_streams.push(play_frequency(311.13));
-        };
-        if ui.button("Play E4").clicked() {
-            self.audio_streams.push(play_frequency(329.63));
-        };
-        if ui.button("Play F4").clicked() {
-            self.audio_streams.push(play_frequency(349.23));
-        };
-        if ui.button("Play F#4").clicked() {
-            self.audio_streams.push(play_frequency(369.99));
-        };
-        if ui.button("Play G4").clicked() {
-            self.audio_streams.push(play_frequency(392.00));
-        };
-        if ui.button("Play G#4").clicked() {
-            self.audio_streams.push(play_frequency(415.30));
-        };
-        if ui.button("Play A4").clicked() {
-            self.audio_streams.push(play_frequency(440.00));
-        };
-        if ui.button("Play A#4").clicked() {
-            self.audio_streams.push(play_frequency(466.16));
-        };
-        if ui.button("Play B4").clicked() {
-            self.audio_streams.push(play_frequency(493.88));
-        };
+        // TODO calculate the frequencies, A3 is 220hz:
+        //  To calculate the frequency of a musical note, you can use a formula that relates it to a
+        //  reference frequency (usually A4 at 440 Hz) and the number of semitones away from that reference.
+        //  The formula is: f = 2^(n/12) * 440, where 'f' is the frequency you want to calculate,
+        //  and 'n' is the number of semitones above (positive) or below (negative) the reference note A4.
+        let notes = vec![
+            ("C4", 261.63),
+            ("C#4", 277.18),
+            ("D4", 293.66),
+            ("D#4", 311.13),
+            ("E4", 329.63),
+            ("F4", 349.23),
+            ("F#4", 369.99),
+            ("G4", 392.00),
+            ("G#4", 415.30),
+            ("A4", 440.00),
+            ("A#4", 466.16),
+            ("B4", 493.88),
+        ];
+
+        // TODO common volume
+
+        ui.label("Sine waves:");
+        ui.horizontal(|ui| {
+            for (note, freq) in &notes {
+                if ui.button("Play ".to_string() + note).clicked() {
+                    self.audio_streams.push(play_frequency_sine_wave(*freq));
+                }
+            }
+        });
+
+        ui.label("Sine waves plus harmonics:");
+        ui.horizontal(|ui| {
+            for (note, freq) in &notes {
+                if ui.button("Play ".to_string() + note).clicked() {
+                    self.audio_streams.push(play_frequency_sine_plus_harmonics(*freq));
+                }
+            }
+        });
+
+        ui.label("Sawtooth:");
+        ui.horizontal(|ui| {
+            for (note, freq) in &notes {
+                if ui.button("Play ".to_string() + note).clicked() {
+                    self.audio_streams.push(play_frequency_sawtooth(*freq));
+                }
+            }
+        });
+
+        ui.label("Karplus-Strong:");
+        ui.horizontal(|ui| {
+            for (note, freq) in &notes {
+                if ui.button("Play ".to_string() + note).clicked() {
+                    self.audio_streams.push(playe_frequency_karplus_strong(*freq));
+                }
+            }
+        });
 
         ui.separator();
 
